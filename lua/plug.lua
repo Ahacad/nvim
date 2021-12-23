@@ -19,17 +19,23 @@ return require('packer').startup(function(use)
     use {'kyazdani42/nvim-web-devicons', event = "BufRead"}
 
     use {
-        'Avimitin/galaxyline.nvim',
+        'neoclide/coc.nvim',
+        branch = "release",
+        config = function() require("config.coc") end
+    }
+
+    use {
+        'glepnir/galaxyline.nvim',
         branch = 'main',
         after = "nvim-web-devicons",
         config = function() require("config.statusline") end
     }
 
-    use {
-        'kyazdani42/nvim-tree.lua',
-        config = function() require("config.nvimtree") end,
-        cmd = {"NvimTreeRefresh", "NvimTreeToggle"}
-    }
+    --use {
+        --'kyazdani42/nvim-tree.lua',
+        --config = function() require("config.nvimtree") end,
+        --cmd = {"NvimTreeRefresh", "NvimTreeToggle"}
+    --}
 
     use {
         'lukas-reineke/indent-blankline.nvim',
@@ -38,77 +44,115 @@ return require('packer').startup(function(use)
     }
 
     -- nvim-bufferline: better buffer line--
+    --use {
+        --'akinsho/nvim-bufferline.lua',
+        --config = function() require("config.bufferline_config") end,
+        --event = "BufRead"
+    --}
+
+    -- neovim color themes
+    
     use {
-        'akinsho/nvim-bufferline.lua',
-        config = function() require("config.bufferline_config") end,
-        event = "BufRead"
+        'folke/tokyonight.nvim',
     }
 
-    -- neovim color theme
     use {
         'Avimitin/neovim-deus',
         'Shatur/neovim-ayu',
         'rebelot/kanagawa.nvim',
     }
 
+
     -- ==================== CODING ==================================
 
     use {'rafamadriz/friendly-snippets', event = "InsertEnter"}
 
     -- ======= Completion =========
-    use {
-        'hrsh7th/nvim-cmp',
-        after = "friendly-snippets",
-        config = function() require("config.completion") end,
-        requires = {'onsails/lspkind-nvim'}
-    }
 
-    use {'hrsh7th/cmp-path', after = {'nvim-cmp'}}
 
-    use {'hrsh7th/cmp-nvim-lsp', after = {'nvim-cmp'}}
+   --use {
+   --    'hrsh7th/nvim-cmp',
+   --    after = "friendly-snippets",
+   --    config = function() require("config.completion") end,
+   --    requires = {'onsails/lspkind-nvim'}
+   --}
 
-    use {'hrsh7th/cmp-buffer', after = {'nvim-cmp'}}
+   -- use {'hrsh7th/cmp-path', after = {'nvim-cmp'}}
 
-    use {'hrsh7th/cmp-vsnip', after = {'nvim-cmp'}}
+   -- use {'hrsh7th/cmp-nvim-lsp', after = {'nvim-cmp'}}
 
-    use {'hrsh7th/vim-vsnip', after = {'nvim-cmp'}}
+   -- use {'hrsh7th/cmp-buffer', after = {'nvim-cmp'}}
 
-    use {"lukas-reineke/cmp-rg", after = {'nvim-cmp'}}
+   -- use {'hrsh7th/cmp-vsnip', after = {'nvim-cmp'}}
+
+   -- use {'hrsh7th/vim-vsnip', after = {'nvim-cmp'}}
+
 
     use {
         'windwp/nvim-autopairs',
         config = function() require('config.autopairs') end,
-        after = 'nvim-cmp'
+        -- after = 'nvim-cmp'
     }
 
     -- ========= LSP ============
-    use {
-        'williamboman/nvim-lsp-installer',
-        ft = {
-            "bash", "sh", "c", "cpp", "lua", "go", "html",
-            "toml", "json", "python", "javascript"
-        },
-        config = function() require("lspconfig") end,
-    }
-
-    use {
-        'neovim/nvim-lspconfig',
-        config = function() require("config.lsp") end,
-        module = "lspconfig",
-    }
+   
+--[[
+   [    use {
+   [        'williamboman/nvim-lsp-installer',
+   [        ft = {
+   [            "bash", "sh", "rust", "c", "cpp", "lua", "markdown", "go", "html",
+   [            "toml", "json", "python"
+   [        }
+   [    }
+   [
+   [    use {
+   [        'neovim/nvim-lspconfig',
+   [        config = function() require("config.lsp") end,
+   [        after = "nvim-lsp-installer"
+   [    }
+   ]]
 
     -- RUST
+    --[[
+       [use {
+       [    'simrat39/rust-tools.nvim',
+       [    after = "nvim-lspconfig",
+       [    config = function() require("config.rust") end
+       [}
+       ]]
+
     use {
-        'simrat39/rust-tools.nvim',
-        ft = "rust",
-        config = function() require("config.rust") end
+        'lervag/vimtex',
+        branch = "master",
     }
 
     use {
       'mfussenegger/nvim-dap',
       module = "dap",
       config = function()
-        require("config.dap_config")
+        local dap = require('dap')
+        dap.adapters.lldb = {
+          type = 'executable',
+          command = '/usr/bin/lldb-vscode', -- adjust as needed
+          name = "lldb"
+        }
+        dap.configurations.cpp = {
+          {
+            name = "Launch",
+            type = "lldb",
+            request = "launch",
+            program = function()
+              return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+            end,
+            cwd = '${workspaceFolder}',
+            stopOnEntry = false,
+            args = {},
+            runInTerminal = false,
+          },
+        }
+        dap.configurations.c = dap.configurations.cpp
+        dap.configurations.rust = dap.configurations.cpp
+        require('dapui').setup()
       end
     }
 
@@ -117,25 +161,31 @@ return require('packer').startup(function(use)
       module = "dapui",
     }
 
-    use {
-        'rust-lang/rust.vim',
-        after = "rust-tools.nvim",
-        setup = function()
-            vim.g.rust_clip_command = 'xclip -selection clipboard'
-        end
-    }
+    --[[
+       [use {
+       [    'rust-lang/rust.vim',
+       [    after = "rust-tools.nvim",
+       [    setup = function()
+       [        vim.g.rust_clip_command = 'xclip -selection clipboard'
+       [    end
+       [}
+       ]]
+
+    --use {
+        --'simrat39/symbols-outline.nvim',
+        --config = function() require("config.symbols") end,
+        --cmd = "SymbolsOutline"
+    --}
 
     use {
-        'simrat39/symbols-outline.nvim',
-        config = function() require("config.symbols") end,
-        cmd = "SymbolsOutline"
+        'liuchengxu/vista.vim',
     }
 
     -- treesitter: support more colorful highlighting
     use {
         'nvim-treesitter/nvim-treesitter',
         run = ':TSUpdate',
-        ft = {"cpp", "toml", "rust", "go", "json", "lua", "fish", "c", "javascript"},
+        ft = {"cpp", "toml", "rust", "go", "json", "lua", "fish", "c"},
         config = function() require('config.treesitter') end
     }
 
@@ -190,11 +240,6 @@ return require('packer').startup(function(use)
         ft = {"markdown"}
     }
 
-    use {
-        'plasticboy/vim-markdown',
-        ft = {"markdown"}
-    }
-
     -- open a big terminal
     use {
         'numtostr/FTerm.nvim',
@@ -224,22 +269,29 @@ return require('packer').startup(function(use)
         end
     }
 
-    -- vim-commentary: for quickly commenting--
-    use {'tpope/vim-commentary', event = "BufRead"}
+    -- nerdcommenter: for quickly commenting--
+    --use {'tpope/vim-commentary', event = "BufRead"}
+    use {'preservim/nerdcommenter', event = "BufRead"}
+    
 
     -- mulit cursor
-    use {'mg979/vim-visual-multi', event = "InsertEnter", branch = 'master'}
+    use {'mg979/vim-visual-multi', 
+        event = "BufRead", 
+        branch = 'master', 
+    }
 
     -- open file when forget sudo
     use {'lambdalisue/suda.vim', cmd = {'SudaWrite', 'SudaRead'}}
 
-    use {
-        'famiu/nvim-reload',
-        cmd = {"Reload", "Restart"},
-        requires = "nvim-lua/plenary.nvim"
-    }
+    --[[
+       [use {
+       [    'famiu/nvim-reload',
+       [    cmd = {"Reload", "Restart"},
+       [    requires = "nvim-lua/plenary.nvim"
+       [}
+       ]]
 
-    use {"andrejlevkovitch/vim-lua-format", ft = {"lua"}}
+    --use {"andrejlevkovitch/vim-lua-format", ft = {"lua"}}
 
     use {
         'glepnir/dashboard-nvim',
@@ -295,14 +347,15 @@ return require('packer').startup(function(use)
 
     -- speed up neovim!
     use {
-        'nathom/filetype.nvim',
-        config = function()
-          require("filetype").setup({
-            -- overrides the filetype or function for filetype
-            -- See https://github.com/nathom/filetype.nvim#customization
-            overrides = {}
-          })
-        end
+        'nathom/filetype.nvim'
+        -- If using a Neovim version earlier than 0.6.0
+        -- setup = function()
+        --   vim.g.did_load_filetypes = 1
+        -- end
+    }
+
+    use {
+        'RRethy/vim-illuminate'
     }
 
     use {
@@ -320,47 +373,29 @@ return require('packer').startup(function(use)
     }
 
     use {
+        'mg979/vim-xtabline',
+    }
+
+    use {
+        'dhruvasagar/vim-table-mode',
+    }
+
+    use {
         'tpope/vim-fugitive',
         cmd = {'G', 'Git', 'Ggrep', 'Gdiffsplit', 'GBrowse'}
     }
 
-    -- Dependency: tmux, nnn
-    -- This is heavily based on my configured nnn
+    -- programming time statistics
     use {
-        "luukvbaal/nnn.nvim",
-        config = function()
-            require("nnn").setup({
-                picker = {
-                    cmd = [[NNN_PLUG="p:preview-tui" ICONLOOKUP=1 tmux new-session nnn -a -Pp]],
-                    style = {border = "shadow"},
-                    session = "shared"
-                }
-            })
-        end,
-        cmd = {'NnnPicker', 'NnnExplorer'}
+        "wakatime/vim-wakatime",
+    }
+
+    -- GitHub copilot
+    use {
+        "github/copilot.vim",
     }
 
     use {
       "ggandor/lightspeed.nvim"
-    }
-
-    use {
-      "max397574/better-escape.nvim",
-      config = function()
-        require("better_escape").setup {
-            mapping = {"jj"}, -- a table with mappings to use
-            timeout = vim.o.timeoutlen, -- the time in which the keys must be hit in ms. Use option timeoutlen by default
-            clear_empty_lines = true, -- clear line after escaping if there is only whitespace
-            keys = "<Esc>", -- keys used for escaping, if it is a function will use the result everytime
-        }
-      end
-    }
-
-    use {
-      'mhinz/vim-sayonara',
-      setup = function()
-        vim.g.sayonara_confirm_quit = 1
-      end,
-      cmd = 'Sayonara'
     }
 end)

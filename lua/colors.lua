@@ -3,7 +3,7 @@ vim.opt.termguicolors=true
 vim.opt.background="dark"
 -- Available theme value:
 -- "ayu", "kanagawa", "deus"
-local theme = "kanagawa"
+local theme = "deus"
 
 local function ayu_setup()
   require('ayu').setup({
@@ -42,3 +42,4 @@ local theme_opt = {
 theme_opt[theme]()
 
 vim.cmd("colorscheme "..theme)
+vim.cmd("hi Normal guibg=NONE ctermbg=NONE") -- transparent background
